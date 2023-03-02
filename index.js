@@ -56,7 +56,7 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
   logData.description = req.body.description;
   logData.duration = Number(req.body.duration);
   if (req.body.date) {
-    logData.date = req.body.date.toDateString();
+    logData.date = new Date(req.body.date).toDateString();
   } else {
     logData.date = new Date().toDateString();
   }
@@ -77,6 +77,26 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
 
 app.get("/api/users/:_id/logs", async (req, res) => {
   const user = await User.findById(req.params._id);
+
+  let from = req.query.from;
+  let to = req.query.to;
+  let limit = req.query.limit;
+
+  if (from && to) {
+    from = Date.parse(from);
+    to = Date.parse(to);
+    user.logs = user.logs.filter(
+      (log) => Date.parse(log.date) >= from && Date.parse(log.date) <= to
+    );
+  }
+
+  if (limit) {
+    let newLog = [];
+    for (let i = 0; i < limit; i++) {
+      newLog.push(user.logs[i]);
+    }
+    user.logs = newLog;
+  }
 
   res.json({
     _id: user._id,
